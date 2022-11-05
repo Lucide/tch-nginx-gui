@@ -127,7 +127,8 @@ stateMachines = {
             service_ok_eco = {
                 staticLed("power:orange", false),
                 staticLed("power:red", false),
-                staticLed("power:blue", true),
+                -- staticLed("power:blue", true),
+                staticLed("power:blue", false),
                 staticLed("power:green", false)
             },
             service_ok_fullpower = {
