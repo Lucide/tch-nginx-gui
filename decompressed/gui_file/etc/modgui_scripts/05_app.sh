@@ -36,7 +36,7 @@ trafficmon_support() {
 		rm -rf /root/trafficmon
 	fi
 
-	if [ -n "$(< /etc/crontabs/root grep trafficmon)" ]; then
+	if grep -q trafficmon /etc/crontabs/root; then
 		killall trafficmon 2>/dev/null
 		killall trafficdata 2>/dev/null
 		sed -i '/trafficmon/d' /etc/crontabs/root
@@ -73,7 +73,7 @@ telstra_support_check() {
 		uci set modgui.app.telstra_webui="0"
 	fi
 	if [ -f /tmp/telstra_gui.tar.bz2 ]; then
-		if [ "$(uci get -q modgui.app.telstra_webui)" == "1" ]; then
+		if [ "$(uci get -q modgui.app.telstra_webui)" = "1" ]; then
 			bzcat /tmp/telstra_gui.tar.bz2 | tar -C / -xf -
 		fi
 		rm /tmp/telstra_gui.tar.bz2

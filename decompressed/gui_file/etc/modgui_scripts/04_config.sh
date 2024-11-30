@@ -112,7 +112,7 @@ eco_param() {
     uci set power.cpu.cpuspeed='256'
     uci set power.cpu.wait='1'
     logecho "Restarting power management"
-    /etc/init.d/power restart &>/dev/null
+    /etc/init.d/power restart >/dev/null 2>&1
   fi
 }
 
@@ -259,7 +259,7 @@ real_ver_entitied() {
 }
 
 fix_fxs_date_display() {
-  if [ "$(uci get -q mmpbxbrcmfxsdev.fxs_dev_0.cid_display_date_enabled)" == "0" ]; then
+  if [ "$(uci get -q mmpbxbrcmfxsdev.fxs_dev_0.cid_display_date_enabled)" = "0" ]; then
     logecho "Enabling time display over fxs ports"
     uci set mmpbxbrcmfxsdev.fxs_dev_0.cid_display_date_enabled=1
     uci set mmpbxbrcmfxsdev.fxs_dev_1.cid_display_date_enabled=1
@@ -346,7 +346,7 @@ mobiled_lib_add() {
     /etc/init.d/mobiled restart
   else
     #make sure we haven't replaced it some old GUI install, restore from rom if needed
-    if [[ -f /rom/etc/init.d/mobiled && -n "$(cmp /rom/etc/init.d/mobiled /etc/init.d/mobiled)" ]]; then
+    if [ -f /rom/etc/init.d/mobiled ] && [ -n "$(cmp /rom/etc/init.d/mobiled /etc/init.d/mobiled)" ]; then
       logecho "Restoring and restarting /etc/init.d/mobiled ..."
       cp /rom/etc/init.d/mobiled /etc/init.d/mobiled
       /etc/init.d/mobiled restart
@@ -498,11 +498,11 @@ cumulative_check_gui() {
 
   if [ ! "$(uci get -q modgui.gui.gui_hash)" ]; then
     uci set modgui.gui.new_ver="Unknown"
-    uci set modgui.gui.gui_hash=$gui_hash
+    uci set modgui.gui.gui_hash="$gui_hash"
     uci set modgui.gui.outdated_ver='0'
-  elif [ "$(uci get -q modgui.gui.gui_hash)" != $gui_hash ]; then
+  elif [ "$(uci get -q modgui.gui.gui_hash)" != "$gui_hash" ]; then
     uci set modgui.gui.new_ver="Unknown"
-    uci set modgui.gui.gui_hash=$gui_hash
+    uci set modgui.gui.gui_hash="$gui_hash"
     uci set modgui.gui.outdated_ver='0'
   fi
   if [ ! "$(uci get -q modgui.gui.autoupgrade)" ]; then

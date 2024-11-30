@@ -15,8 +15,8 @@ check_upgrade_shit() {
 
 restore_original_mapper() {
   logecho "Restoring and enabling few transformer mappers..."
-	local orig_dir=/rom/usr/share/transformer/mappings
-	local target=/usr/share/transformer/mappings
+	orig_dir=/rom/usr/share/transformer/mappings
+	target=/usr/share/transformer/mappings
 
 	if [ "$(md5sum $orig_dir/device2/Device.map | awk '{print $1}')" != "$(md5sum $target/device2/Device.map | awk '{print $1}')" ]; then
 		mkdir /tmp/tmp_bff_file
@@ -47,8 +47,8 @@ restore_original_mapper() {
 
 transformer_lib_check() {
   logecho "Transformer lib check"
-	local orig_dir=/rom/usr
-	local target=/usr
+	orig_dir=/rom/usr
+	target=/usr
 
 	if [ "$(md5sum $orig_dir/lib/lua/transformer/commitapply.lua | awk '{print $1}')" != "$(md5sum $target/lib/lua/transformer/commitapply.lua | awk '{print $1}')" ]; then
 		rm $target/share/transformer/mappings/rpc/*
@@ -121,7 +121,7 @@ checkver_cron() {
 				rm /etc/crontabs/root #THIS CHECK A VALID ROOT CRON... we remove it as it's useless if the owner is not root.
 			fi
 		fi
-		if [ ! -f /etc/crontabs/root ] || [ ! "$(< /etc/crontabs/root grep checkver)" ]; then
+		if [ ! -f /etc/crontabs/root ] || ! grep -q "checkver" /etc/crontabs/root; then
 			rand_h=$(awk -v min=1 -v max=6 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
 			rand_m=$(awk -v min=1 -v max=59 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
 			echo "$rand_m $rand_h * * * /usr/share/transformer/scripts/checkver >/dev/null 2>&1" >> /etc/crontabs/root
@@ -131,7 +131,7 @@ checkver_cron() {
 }
 
 cron_christmas() {
-	if [ ! -f /etc/crontabs/root ] || [ "$(< /etc/crontabs/root grep -c "christmas_tree")" -lt 1 ]; then
+	if [ ! -f /etc/crontabs/root ] || ! grep -q "christmas_tree" /etc/crontabs/root; then
 		echo "*/30 * 24-26 12 * /etc/christmas_tree.sh &" >> /etc/crontabs/root
 	fi
 }

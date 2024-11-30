@@ -18,7 +18,7 @@ extract_with_check() {
       continue
     fi
 
-    [ -n "$(echo "$file" | grep .md5sum)" ] && continue
+    grep -q '.md5sum' "$file" && continue
 
     orig_file=/$file
     file=$MD5_CHECK_DIR/$file
@@ -26,7 +26,7 @@ extract_with_check() {
     if [ -f "$orig_file" ]; then
       md5_file=$(md5sum "$file" | awk '{ print $1 }')
       md5_orig_file=$(md5sum "$orig_file" | awk '{ print $1 }')
-      if [ "$md5_file" == "$md5_orig_file" ]; then
+      if [ "$md5_file" = "$md5_orig_file" ]; then
         rm "$file"
         continue
       fi
@@ -55,21 +55,33 @@ apply_right_opkg_repo() {
 
   opkg_file="/etc/opkg.conf"
 
-  if [ "$cpu_type" == "armv7l" ]; then
+  if [ "$cpu_type" = "armv7l" ]; then
     case $marketing_version in
     "19."*)
       sed -i '/homeware\/18\/brcm63xx-tch/d' /etc/opkg.conf #remove old setted feeds
       sed -i '/Ansuel\/GUI_ipk\/kernel-4.1/d' /etc/opkg.conf #remove old setted feeds
-      if ! grep -q "homeware/19/brcm6xxx-tch" $opkg_file; then
+      sed -i '/repository\.macoers\.com\/homeware\/19\/brcm6xxx-tch/d' /etc/opkg.conf #remove broken 19 macoers feeds
+      if ! grep -q "Ansuel/GUI_ipk/kernel-4.1" $opkg_file; then
         cat <<EOF >>$opkg_file
 arch all 100
 arch arm_cortex-a9 200
 arch arm_cortex-a9_neon 300
-src/gz chaos_calmer_base_macoers https://repository.macoers.com/homeware/19/brcm6xxx-tch/VANTW/base
-src/gz chaos_calmer_packages_macoers https://repository.macoers.com/homeware/19/brcm6xxx-tch/VANTW/packages
-src/gz chaos_calmer_luci_macoers https://repository.macoers.com/homeware/19/brcm6xxx-tch/VANTW/luci
-src/gz chaos_calmer_routing_macoers https://repository.macoers.com/homeware/19/brcm6xxx-tch/VANTW/routing
-src/gz chaos_calmer_telephony_macoers https://repository.macoers.com/homeware/19/brcm6xxx-tch/VANTW/telephony
+src/gz chaos_calmer_base https://raw.githubusercontent.com/Ansuel/GUI_ipk/kernel-4.1/base
+src/gz chaos_calmer_packages https://raw.githubusercontent.com/Ansuel/GUI_ipk/kernel-4.1/packages
+src/gz chaos_calmer_luci https://raw.githubusercontent.com/Ansuel/GUI_ipk/kernel-4.1/luci
+src/gz chaos_calmer_routing https://raw.githubusercontent.com/Ansuel/GUI_ipk/kernel-4.1/routing
+src/gz chaos_calmer_telephony https://raw.githubusercontent.com/Ansuel/GUI_ipk/kernel-4.1/telephony
+src/gz chaos_calmer_core https://raw.githubusercontent.com/Ansuel/GUI_ipk/kernel-4.1/target/packages
+EOF
+      fi
+      sed -i '/repository\/homeware\/18\/brcm63xx-tch/d' /etc/opkg.conf #remove old setted feeds
+      if ! grep -q "homeware/18/brcm63xx-tch" $opkg_file; then
+        cat <<EOF >>$opkg_file
+src/gz chaos_calmer_base_macoers https://repository.macoers.com/homeware/18/brcm63xx-tch/VANTW/base
+src/gz chaos_calmer_packages_macoers https://repository.macoers.com/homeware/18/brcm63xx-tch/VANTW/packages
+src/gz chaos_calmer_luci_macoers https://repository.macoers.com/homeware/18/brcm63xx-tch/VANTW/luci
+src/gz chaos_calmer_routing_macoers https://repository.macoers.com/homeware/18/brcm63xx-tch/VANTW/routing
+src/gz chaos_calmer_telephony_macoers https://repository.macoers.com/homeware/18/brcm63xx-tch/VANTW/telephony
 EOF
       fi
       ;;
@@ -135,10 +147,10 @@ EOF
       logecho "No known ARM feeds for this version $marketing_version"
       ;;
     esac
-  elif [ "$cpu_type" == "mips" ]; then
+  elif [ "$cpu_type" = "mips" ]; then
     case $marketing_version in
     "16."* | "17."*)
-      if [ ! grep -q "$(grep $opkg_file -e "chaos_calmer/15.05.1/brcm63xx")" ]; then
+      if ! grep -q "chaos_calmer/15.05.1/brcm63xx" $opkg_file; then
         sed -i '/FrancYescO\/789vacv2/d' /etc/opkg.conf #remove old setted feeds
         cat <<EOF >>$opkg_file
 src/gz chaos_calmer_base http://archive.openwrt.org/chaos_calmer/15.05.1/brcm63xx/generic/packages/base
@@ -166,6 +178,7 @@ EOF
   [ -f /etc/opkg/distfeeds.conf ] && {
     sed -i '/15.05.1\/brcm63xx-tch/d' /etc/opkg/distfeeds.conf
     sed -i '/targets\/brcm6xxx-tch\/VBNTJ_502L07p1/d' /etc/opkg/distfeeds.conf
+    sed -i '/targets\/brcm6xxx-tch\/VCNTD_502L07p1/d' /etc/opkg/distfeeds.conf
   }
 }
 
@@ -180,7 +193,7 @@ ledfw_extract() {
 }
 
 ledfw_rework_TG788() {
-  if [ ! "$(uci get -q button.info)" ] || [ "$(uci get -q button.info)" == "BTN_3" ]; then
+  if [ ! "$(uci get -q button.info)" ] || [ "$(uci get -q button.info)" = "BTN_3" ]; then
     logecho "Setting up status (wifi) button..."
     uci del button.easy_reset
     uci set button.info=button
@@ -268,18 +281,18 @@ fi
 # and should be linked to the package download, make sure to reflect changes in the modal
 case $marketing_version in
 "16.1"* | "16.2"*)
-  [ "$cpu_type" == "armv7l" ] && install_specific TG789Xtream35B
-  [ "$cpu_type" == "mips" ] && install_specific TG789
+  [ "$cpu_type" = "armv7l" ] && install_specific TG789Xtream35B
+  [ "$cpu_type" = "mips" ] && install_specific TG789
   ;;
 "16."* | "17."*)
-  [ "$cpu_type" == "armv7l" ] && {
+  [ "$cpu_type" = "armv7l" ] && {
     [ -z "${device_type##*TG800*}" ] && install_specific TG800 || install_specific DGA
   }
-  [ "$cpu_type" == "mips" ] && install_specific TG789
+  [ "$cpu_type" = "mips" ] && install_specific TG789
   ;;
 "18."*)
-  [ "$cpu_type" == "armv7l" ] && install_specific DGA
-  [ "$cpu_type" == "mips" ] && logecho "Unknown what specific_app to install on $marketing_version $cpu_type"
+  [ "$cpu_type" = "armv7l" ] && install_specific DGA
+  [ "$cpu_type" = "mips" ] && logecho "Unknown what specific_app to install on $marketing_version $cpu_type"
   ;;
 *)
   uci set modgui.app.specific_app="1" #no specific package for this device
