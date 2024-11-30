@@ -135,7 +135,8 @@ stateMachines = {
                 staticLed("power:orange", false),
                 staticLed("power:red", false),
                 staticLed("power:blue", false),
-                staticLed("power:green", true)
+                -- staticLed("power:green", true)
+                staticLed("power:green", false)
             },
             service_notok = {
                 staticLed("power:orange", false),
